@@ -33,3 +33,28 @@ A) Memoria del proyecto en formato pdf como indicado en Estructura  del document
 https://pmanzoni.notion.site/Instrucciones-para-plantear-tu-proyecto-de-RSE-2025-90241e4666604ddeb55dff261b440009
 
 B) video de hasta 10 minutos en el que presentáis vuestro trabajo, básicamente su contexto, los objetivos y los resultados obtenidos, o donde podéis realizar una demostración de lo que habéis hecho. 
+
+
+HITO 3: Stack de Monitorización (Grafana + Base de Datos) (Semana 2-3)
+Responsable sugerido: Rubén
+Tareas:
+3.1 Decidir arquitectura de datos
+Opciones:
+
+Opción A: Suricata → Filebeat → Elasticsearch → Grafana
+Opción B: Suricata → Logstash → InfluxDB → Grafana
+Opción C: Suricata → Python script → Prometheus → Grafana (más ligero)
+
+3.2 Instalar stack con Docker Compose
+yaml# docker-compose.yml básico
+version: '3'
+services:
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+  
+  influxdb:  # o elasticsearch
+    image: influxdb:latest
+    ports:
+      - "8086:8086"
