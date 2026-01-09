@@ -19,5 +19,15 @@ Hablar de eficiencia de detección, impacto energético de ataques, y cómo miti
 
 # Entregar:
 Tendréis que enviar (usando la tarea correspondiente)
-A) Memoria del proyecto en formato pdf como indicado en Estructura  del documento a entregar 
+A) Memoria del proyecto en formato pdf como indicado en Estructura  del documento a entregar:
+1.- Título del proyecto
+2.- Resumen
+3.- Introducción y definición del problema
+4.- Herramientas y software utilizados
+5.- Arquitectura y desarrollo técnico
+6.- Pruebas y validación funcional
+7.- Conclusiones y trabajo futuro
+8.- Bibliografía y anexos
+
 B) video de hasta 10 minutos en el que presentáis vuestro trabajo, básicamente su contexto, los objetivos y los resultados obtenidos, o donde podéis realizar una demostración de lo que habéis hecho. 
+
