@@ -29,5 +29,7 @@ A) Memoria del proyecto en formato pdf como indicado en Estructura  del document
 7.- Conclusiones y trabajo futuro
 8.- Bibliografía y anexos
 
-B) video de hasta 10 minutos en el que presentáis vuestro trabajo, básicamente su contexto, los objetivos y los resultados obtenidos, o donde podéis realizar una demostración de lo que habéis hecho. 
+# Importante:
+https://pmanzoni.notion.site/Instrucciones-para-plantear-tu-proyecto-de-RSE-2025-90241e4666604ddeb55dff261b440009
 
+B) video de hasta 10 minutos en el que presentáis vuestro trabajo, básicamente su contexto, los objetivos y los resultados obtenidos, o donde podéis realizar una demostración de lo que habéis hecho. 
