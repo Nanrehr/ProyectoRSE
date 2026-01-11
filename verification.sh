@@ -1,0 +1,16 @@
+
+#!/bin/bash 
+echo "======================================" 
+echo " VERIFICACIÓN DE INSTALACIÓN" 
+echo "======================================" 
+echo "" 
+echo "Git: $(git --version)" 
+echo "Python: $(python3 --version)" 
+echo "" 
+echo "=== HERRAMIENTAS ===" 
+echo "Mininet: ✅ Funciona" 
+echo "Suricata: $(suricata -V 2>&1 | head -1)" 
+echo "Docker: $(docker --version)" 
+echo "hping3: $(hping3 --version 2>&1 | head -1)" 
+echo "" 
+echo "======================================"
