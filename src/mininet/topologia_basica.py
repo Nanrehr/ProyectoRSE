@@ -8,6 +8,12 @@ Topología:
     servidor (h1) --- switch (s1) --- cliente (h2)
                               |
                           atacante (h3)
+
+LANZAR TOPOLOGÍA
+sudo python3 topologia_basica.py (se te queda dentro de mininet)
+
+LIMPIAR mininet después de su uso
+sudo mn -c
 """
 
 from mininet.net import Mininet

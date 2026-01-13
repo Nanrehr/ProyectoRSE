@@ -1,0 +1,60 @@
+# =========================================================
+# Reglas DDoS - Proyecto RSE 2025
+# Autores: Daniel Carracedo, Hernán López, Rubén Subiela
+#
+# Objetivo:
+#  - Detectar ataques de tipo flood en una red controlada
+#  - Evitar falsos positivos con tráfico legítimo
+#  - Servir como base para métricas y visualización
+# =========================================================
+
+
+# ---------------------------------------------------------
+# REGLA 1 - SYN FLOOD contra servidor web
+# Detecta un número elevado de paquetes TCP SYN en poco tiempo
+# ---------------------------------------------------------
+alert tcp any any -> 10.0.0.1 80 (
+    flags:S;
+    msg:"RSE - POSIBLE SYN FLOOD contra servidor";
+    flow:stateless;
+    threshold:type both, track by_dst, count 50, seconds 1;
+    classtype:attempted-dos;
+    sid:1000001;
+    rev:1;
+)
+
+
+# ---------------------------------------------------------
+# REGLA 2 - Flood TCP genérico (no solo puerto 80)
+# Útil para detectar escaneos o ataques más amplios
+# ---------------------------------------------------------
+alert tcp any any -> 10.0.0.1 any (
+    flags:S;
+    msg:"RSE - Anomalia: alto volumen de SYN TCP";
+    flow:stateless;
+    threshold:type both, track by_dst, count 100, seconds 2;
+    classtype:attempted-dos;
+    sid:1000002;
+    rev:1;
+)
+
+
+# ---------------------------------------------------------
+# REGLA 3 - ICMP Flood (ping flood)
+# No es obligatorio, pero suma puntos como escenario extra
+# ---------------------------------------------------------
+alert icmp any any -> 10.0.0.1 any (
+    msg:"RSE - POSIBLE ICMP FLOOD";
+    threshold:type both, track by_dst, count 20, seconds 1;
+    classtype:attempted-dos;
+    sid:1000003;
+    rev:1;
+)
+
+
+# ---------------------------------------------------------
+# NOTA:
+# - Estas reglas están ajustadas para un entorno académico
+# - Los thresholds pueden modificarse para analizar eficiencia
+# - Se prioriza simplicidad y explicabilidad (RSE)
+# ---------------------------------------------------------
