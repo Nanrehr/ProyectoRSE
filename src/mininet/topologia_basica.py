@@ -14,6 +14,11 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 from mininet.link import TCLink
+import os
+
+# Obtener la ruta base del proyecto
+PROYECTO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SCRIPTS_DIR = os.path.join(PROYECTO_DIR, 'scripts')
 
 def crear_topologia_basica():
     """
@@ -76,6 +81,11 @@ def crear_topologia_basica():
     
     info('*** Iniciando red\n')
     net.start()
+
+    info('*** Configurando variables de entorno en hosts\n')
+    # Establecer variable de entorno en cada host con la ruta a scripts
+    for host in net.hosts:
+        host.cmd(f'export SCRIPTS_DIR={SCRIPTS_DIR}')
     
     info('*** Configurando servidor web en h1\n')
     # Iniciar servidor HTTP simple en el servidor
@@ -92,9 +102,13 @@ def crear_topologia_basica():
     info('  links               - Ver enlaces\n')
     info('  pingall             - Probar conectividad\n')
     info('  servidor ifconfig   - Ver IP del servidor\n')
+    info('  cliente ifconfig    - Ver IP del cliente\n')
     info('  cliente curl 10.0.0.1 - Probar servidor web\n')
     info('  xterm servidor      - Abrir terminal en servidor\n')
+    info('  xterm cliente       - Abrir terminal en cliente\n')
     info('  xterm atacante      - Abrir terminal en atacante\n')
+    info('  cliente trafico-legitimo     - Ejecutar tráfico legítimo (2 min, cada 5 seg)\n')
+    cliente.cmd(f'alias trafico-legitimo="python3 {SCRIPTS_DIR}/trafico_legitimo.py --servidor 10.0.0.1 --duracion 2 --intervalo 5"')
     info('\n*** Abriendo CLI\n')
     
     CLI(net)
