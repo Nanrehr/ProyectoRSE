@@ -12,7 +12,7 @@ vars:
     HTTP_PORTS: "80"
 
 # Directorio de logs
-default-log-dir: /home/hlopper/Desktop/RSE/ProyectoRSE/logs/suricata
+default-log-dir: /home/ruben/Escritorio/ProyectoRSE/logs/suricata
 
 # Salidas
 outputs:
@@ -46,7 +46,7 @@ af-packet:
     cluster-type: cluster_flow
 
 # Reglas
-default-rule-path: /home/hlopper/Desktop/RSE/ProyectoRSE/src/suricata
+default-rule-path: /home/ruben/Escritorio/ProyectoRSE/src/suricata
 rule-files:
   - ddos_rules.rules
 
@@ -94,7 +94,7 @@ logging:
     - file:
         enabled: yes
         level: info
-        filename: /home/hlopper/Desktop/RSE/ProyectoRSE/logs/suricata/suricata.log
+        filename: /home/ruben/Escritorio/ProyectoRSE/logs/suricata/suricata.log
 
 # App layer
 app-layer:

@@ -13,8 +13,13 @@ from mininet.log import setLogLevel, info
 from mininet.link import TCLink
 
 # Rutas absolutas
-LOGS_DIR = '/home/hlopper/Desktop/RSE/ProyectoRSE/logs/suricata'
-CONFIG_FILE = '/home/hlopper/Desktop/RSE/ProyectoRSE/src/suricata/suricata.yaml'
+PROYECT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+LOGS_DIR = os.path.join(PROYECT_PATH, "logs", "suricata")
+CONFIG_TEMPLATE = os.path.join(PROYECT_PATH, "src", "suricata", "suricata_template.yaml")
+CONFIG_RUN = os.path.join(PROYECT_PATH, "src", "suricata", "suricata_run.yaml")
+
+print(CONFIG_RUN)
+print(LOGS_DIR)
 
 def limpiar():
     """Limpia procesos y archivos previos"""
@@ -27,6 +32,20 @@ def limpiar():
 def main():
     # Limpiar antes de empezar
     limpiar()
+
+    # Crear nuevo .yaml a raíz de la plantilla, con la ruta absoluta obtenida dinámicamente
+    # 1. Leer el contenido de la plantilla original
+    with open(CONFIG_TEMPLATE, 'r') as file:
+        data = file.read()
+
+    # 2. Reemplar la ruta
+    data_actualizada = data.replace("REEMPLAZAR_CON_RUTA_PROYECTO", PROYECT_PATH)
+
+    # 3. Guardar el resultado en un archivo nuevo y dar permisos
+    with open(CONFIG_RUN, 'w') as file:
+        file.write(data_actualizada)
+
+    subprocess.run(['sudo', 'chmod', '777', CONFIG_RUN])
     
     # Crear directorio de logs con permisos
     os.makedirs(LOGS_DIR, exist_ok=True)
@@ -52,10 +71,16 @@ def main():
     info('*** Iniciando servidor HTTP\n')
     servidor.cmd('python3 -m http.server 80 &')
     time.sleep(1)
+
+    info('*** Desactivando offloading en el servidor\n')
+    servidor.cmd('ethtool -K servidor-eth0 rx off tx off gso off gro off lro off tso off')
+    time.sleep(1)
     
     info('*** Iniciando Suricata en el SERVIDOR\n')
     # CRÍTICO: -i servidor-eth0 (interfaz DENTRO de Mininet)
-    servidor.cmd(f'suricata -c {CONFIG_FILE} -i servidor-eth0 -l {LOGS_DIR} -D')
+    servidor.cmd(f'suricata -c {CONFIG_RUN} -i servidor-eth0 -l {LOGS_DIR} > {LOGS_DIR}/startup_error.log 2>&1 &')
+    #servidor.cmd(f'suricata -c {CONFIG_RUN} -i servidor-eth0 -l {LOGS_DIR} -D')
+    servidor.cmd(f'suricata -V')
     time.sleep(3)
     
     # Verificar
@@ -75,9 +100,9 @@ def main():
     info('1️⃣  Ver alertas EN OTRA TERMINAL:\n')
     info(f'   tail -f {LOGS_DIR}/fast.log\n\n')
     info('2️⃣  Lanzar ataque AQUÍ:\n')
-    info('   atacante python3 /home/hlopper/Desktop/RSE/ProyectoRSE/src/ataques/syn_flood.py 10.0.0.1 80 100 0.01\n\n')
+    info(f'   atacante python3 ${PROYECT_PATH}/src/ataques/syn_flood.py 10.0.0.1 80 100 0.01\n\n')
     info('3️⃣  Tráfico legítimo:\n')
-    info('   cliente python3 /home/hlopper/Desktop/RSE/ProyectoRSE/src/scripts/trafico_legitimo.py --servidor 10.0.0.1 --duracion 1 --intervalo 3 &\n\n')
+    info(f'   cliente python3 ${PROYECT_PATH}/src/scripts/trafico_legitimo.py --servidor 10.0.0.1 --duracion 1 --intervalo 3 &\n\n')
     info('4️⃣  Salir:\n')
     info('   exit\n\n')
     info('='*60 + '\n')

