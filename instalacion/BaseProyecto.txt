@@ -1,0 +1,395 @@
+Base del proyecto RSE:
+
+1️⃣ Actualización del sistema
+
+Siempre el primer paso (y mencionable en la memoria):
+
+sudo apt update && sudo apt upgrade -y
+sudo reboot
+
+2️⃣ Paquetes base y dependencias comunes
+
+sudo apt install -y \
+  git curl wget vim \
+  python3 python3-pip \
+  build-essential \
+  software-properties-common
+
+Esto \ significa que va todo en una línea de comando
+
+Comprobar:
+
+python3 --version
+pip3 --version
+
+3️⃣ Instalación de Mininet
+
+Mininet se usará a partir del Hito 2, pero se instala aquí.
+
+sudo apt install -y mininet openvswitch-switch
+
+Verificación:
+
+sudo mn --test pingall
+
+✅ Si los hosts se hacen ping → Mininet funciona.
+
+4️⃣ Instalación de Suricata (IDS)
+
+Ubuntu 22.04 trae una versión estable suficiente para el proyecto.
+
+sudo apt install -y suricata
+
+Comprobad versión:
+
+suricata -V
+
+(Tiene que salir la 6.0.4)
+
+Comprobar estado del servicio
+
+sudo systemctl status suricata
+
+Si no está activo:
+
+sudo systemctl enable suricata
+sudo systemctl start suricata
+
+Si hay errores hacer esto:
+
+Edita el archivo principal:
+
+sudo nano /etc/suricata/suricata.yaml
+
+Busca la sección af-packet (usa CTRL+W y escribe af-packet).
+
+Verás algo parecido a esto:
+
+af-packet:
+  - interface: eth0
+
+🔴 Ese eth0 suele ser el problema
+Cámbialo por tu interfaz real
+
+Ejemplo:
+
+af-packet:
+  - interface: enp0s3
+
+Guarda y sal
+
+ANTES de arrancar el servicio, valida:
+
+sudo suricata -T -c /etc/suricata/suricata.yaml
+
+Resultado esperado:
+
+Configuration provided was successfully loaded
+
+Si aún falla:
+
+Paso 1 – Ver si existen reglas
+
+Ejecuta:
+
+ls -l /etc/suricata/rules/
+
+Ejecuta como root:
+
+sudo suricata-update
+
+(Tarda lo suyo)
+
+Ejecuta:
+
+ls -l /var/lib/suricata/rules/
+
+Deberías ver:
+
+suricata.rules
+
+Edita:
+
+sudo nano /etc/suricata/suricata.yaml
+
+Busca:
+
+default-rule-path: /etc/suricata/rules
+
+Y cámbialo por:
+
+default-rule-path: /var/lib/suricata/rules
+
+Luego, un poco más abajo, asegúrate de que esté así:
+
+rule-files:
+  - suricata.rules
+
+sudo suricata -T -c /etc/suricata/suricata.yaml
+
+✅ Resultado correcto:
+
+Configuration provided was successfully loaded
+
+Arrancar el servicio definitivamente
+
+sudo systemctl restart suricata
+sudo systemctl status suricata
+
+Debe salir:
+
+Active: active (running)
+
+5️⃣ Instalación de Prometheus (base de datos de métricas)
+
+Prometheus NO viene en repos oficiales, lo instalamos desde binario (forma estándar).
+🔹 Paso 5.1 – Crear usuario para Prometheus (buena práctica)
+
+sudo useradd --no-create-home --shell /bin/false prometheus
+
+🔹 Paso 5.2 – Descargar Prometheus
+
+cd /tmp
+wget https://github.com/prometheus/prometheus/releases/download/v2.49.1/prometheus-2.49.1.linux-amd64.tar.gz
+
+Descomprimir:
+
+tar xvf prometheus-2.49.1.linux-amd64.tar.gz
+
+Mover binarios:
+
+sudo mv prometheus-2.49.1.linux-amd64/prometheus /usr/local/bin/
+sudo mv prometheus-2.49.1.linux-amd64/promtool /usr/local/bin/
+
+Permisos:
+
+sudo chown prometheus:prometheus /usr/local/bin/prometheus
+sudo chown prometheus:prometheus /usr/local/bin/promtool
+
+🔹 Paso 5.3 – Directorios de configuración y datos
+
+sudo mkdir /etc/prometheus
+sudo mkdir /var/lib/prometheus
+
+sudo chown prometheus:prometheus /etc/prometheus
+sudo chown prometheus:prometheus /var/lib/prometheus
+
+Copiar archivos base:
+
+sudo mv prometheus-2.49.1.linux-amd64/consoles /etc/prometheus
+sudo mv prometheus-2.49.1.linux-amd64/console_libraries /etc/prometheus
+
+🔹 Paso 5.4 – Configuración básica de Prometheus
+
+Crear archivo:
+
+sudo nano /etc/prometheus/prometheus.yml
+
+Contenido mínimo:
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+Permisos:
+
+sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
+
+🔹 Paso 5.5 – Crear servicio systemd
+
+sudo nano /etc/systemd/system/prometheus.service
+
+Contenido:
+
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/prometheus \
+  --config.file=/etc/prometheus/prometheus.yml \
+  --storage.tsdb.path=/var/lib/prometheus/
+
+[Install]
+WantedBy=multi-user.target
+
+Activar servicio:
+
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable prometheus
+sudo systemctl start prometheus
+
+Comprobar:
+
+sudo systemctl status prometheus
+
+Acceso web:
+
+http://localhost:9090
+
+6️⃣ Instalación de Grafana
+
+Grafana no viene en repos oficiales, hay que añadirlos.
+
+- Paso 6.1 — Descargar Grafana
+
+cd /tmp
+wget https://dl.grafana.com/enterprise/release/grafana-enterprise_11.4.0_amd64.deb
+
+- Paso 6.2 — Instalar Grafana
+
+sudo dpkg -i grafana-enterprise_11.4.0_amd64.deb
+
+Si da error de dependencias:
+
+sudo apt-get install -f -y
+
+- Paso 6.3 — Habilitar e iniciar servicio
+
+sudo systemctl daemon-reload
+sudo systemctl enable grafana-server
+sudo systemctl start grafana-server
+
+Verificar:
+
+sudo systemctl status grafana-server
+
+✅ Resultado esperado:
+
+Active: active (running)
+
+🔹 Paso 6.4 — Acceso web
+
+Abrir navegador:
+
+firefox http://localhost:3000 &
+
+Credenciales por defecto:
+- Usuario: admin
+- Contraseña: admin
+
+Te pedirá cambiar la contraseña → Elegir una que recuerdes
+
+🔹 Paso 6.5 — Conectar Prometheus a Grafana
+
+En Grafana web:
+1. Menú lateral → ⚙️ Settings (o Connections)
+2. Data Sources
+3. Add data source
+4. Seleccionar "Prometheus"
+5. URL: http://localhost:9090
+6. Scroll down → Save & Test
+
+✅ Resultado: "Data source is working"
+
+🔹 Paso 6.6 — Crear dashboard de prueba
+
+1. Menú lateral → Dashboards
+2. New → New Dashboard
+3. Add visualization
+4. Seleccionar "Prometheus"
+5. En Metric: escribir "up"
+6. Run query
+7. Deberías ver gráfica mostrando valor 1 (Prometheus está up)
+8. Save dashboard → Darle un nombre
+
+✅ Si ves la gráfica → Grafana + Prometheus funcionando correctamente
+
+
+Sección 7: Guest Additions (Portapapeles Bidireccional)
+
+🔹 Paso 7.1 — Configurar VirtualBox (VM apagada)
+
+En VirtualBox → Configuración de la VM:
+- General → Avanzado:
+  ✓ Portapapeles compartido: Bidireccional
+  ✓ Arrastrar y soltar: Bidireccional
+
+🔹 Paso 7.2 — Actualizar sistema (CRÍTICO)
+
+⚠️ Hacer ANTES de instalar Guest Additions:
+
+sudo apt update
+sudo apt upgrade -y
+sudo reboot
+
+🔹 Paso 7.3 — Instalar dependencias
+
+sudo apt install -y \
+    build-essential \
+    dkms \
+    linux-headers-$(uname -r) \
+    perl
+
+Verificar:
+
+dpkg -l | grep build-essential
+dpkg -l | grep dkms
+
+🔹 Paso 7.4 — Instalar Guest Additions desde CD
+
+En VirtualBox (menú superior):
+Dispositivos → Insertar imagen de CD de las Guest Additions
+
+En la terminal:
+
+sudo mkdir -p /mnt/cdrom
+sudo mount /dev/cdrom /mnt/cdrom
+cd /mnt/cdrom
+sudo sh ./VBoxLinuxAdditions.run --nox11
+
+Esperar 1-3 minutos hasta que termine.
+
+🔹 Paso 7.5 — Reiniciar
+
+sudo reboot
+
+🔹 Paso 7.7 — Probar portapapeles
+
+✅ Si funciona en ambas direcciones → OK
+
+🔹 Paso 7.8 — Autostart (opcional)
+
+Para que inicie automáticamente:
+
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/vboxclient.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=VirtualBox Guest Additions
+Exec=sh -c 'VBoxClient --clipboard; VBoxClient --draganddrop; VBoxClient --seamless; VBoxClient --display'
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+EOF
+chmod +x ~/.config/autostart/vboxclient.desktop
+
+Ahora iniciará automáticamente cada vez que arranques.
+
+INSTALAR VISUAL:
+/tmp
+
+# Descargar VS Code
+wget -O code.deb 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64'
+
+# Instalar
+sudo apt install ./code.deb -y
+
+# Verificar
+code --version
+
+
+INSTALAR GitHub desktop:
+wget -qO - https://mirror.mwt.me/shiftkey-desktop/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/mwt-desktop.gpg > /dev/null
+sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/mwt-desktop.gpg] https://mirror.mwt.me/shiftkey-desktop/deb/ any main" > /etc/apt/sources.list.d/mwt-desktop.list'
+
+sudo apt update && sudo apt install github-desktop
