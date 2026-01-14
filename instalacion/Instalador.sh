@@ -27,6 +27,7 @@ sudo apt update && sudo apt upgrade -y
 # 2. Paquetes base
 echo "Instalando paquetes base..."
 sudo apt install -y git curl wget vim python3 python3-pip python3-scapy build-essential software-properties-common xterm
+sudo pip3 install prometheus-client watchdog
 python3 --version && pip3 --version && log_info "Paquetes base instalados"
 
 # 3. Instalar Mininet
@@ -89,7 +90,12 @@ scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
+  - job_name: "suricata"
+    static_configs:
+      - targets: ["localhost:8000"]
 EOF
+
+
 
 # Crear servicio Systemd para Prometheus
 cat <<EOF | sudo tee /etc/systemd/system/prometheus.service

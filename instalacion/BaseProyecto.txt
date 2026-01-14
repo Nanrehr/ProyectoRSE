@@ -1,13 +1,13 @@
 Base del proyecto RSE:
 
-1️⃣ Actualización del sistema
+1. Actualización del sistema
 
 Siempre el primer paso (y mencionable en la memoria):
 
 sudo apt update && sudo apt upgrade -y
 sudo reboot
 
-2️⃣ Paquetes base y dependencias comunes
+2. Paquetes base y dependencias comunes
 
 sudo apt install -y \
   git curl wget vim \
@@ -22,7 +22,7 @@ Comprobar:
 python3 --version
 pip3 --version
 
-3️⃣ Instalación de Mininet
+3. Instalación de Mininet
 
 Mininet se usará a partir del Hito 2, pero se instala aquí.
 
@@ -32,9 +32,9 @@ Verificación:
 
 sudo mn --test pingall
 
-✅ Si los hosts se hacen ping → Mininet funciona.
+Si los hosts se hacen ping -> Mininet funciona.
 
-4️⃣ Instalación de Suricata (IDS)
+4. Instalación de Suricata (IDS)
 
 Ubuntu 22.04 trae una versión estable suficiente para el proyecto.
 
@@ -68,7 +68,7 @@ Verás algo parecido a esto:
 af-packet:
   - interface: eth0
 
-🔴 Ese eth0 suele ser el problema
+Ese eth0 suele ser el problema
 Cámbialo por tu interfaz real
 
 Ejemplo:
@@ -127,7 +127,7 @@ rule-files:
 
 sudo suricata -T -c /etc/suricata/suricata.yaml
 
-✅ Resultado correcto:
+Resultado correcto:
 
 Configuration provided was successfully loaded
 
@@ -140,15 +140,16 @@ Debe salir:
 
 Active: active (running)
 
-5️⃣ Instalación de Prometheus (base de datos de métricas)
+5. Instalación de Prometheus (base de datos de métricas)
 
 Prometheus NO viene en repos oficiales, lo instalamos desde binario (forma estándar).
-🔹 Paso 5.1 – Crear usuario para Prometheus (buena práctica)
+ Paso 5.1 – Crear usuario para Prometheus (buena práctica)
 
 sudo useradd --no-create-home --shell /bin/false prometheus
 
-🔹 Paso 5.2 – Descargar Prometheus
+ Paso 5.2 – Descargar Prometheus
 
+sudo pip3 install prometheus-client watchdog
 cd /tmp
 wget https://github.com/prometheus/prometheus/releases/download/v2.49.1/prometheus-2.49.1.linux-amd64.tar.gz
 
@@ -166,7 +167,7 @@ Permisos:
 sudo chown prometheus:prometheus /usr/local/bin/prometheus
 sudo chown prometheus:prometheus /usr/local/bin/promtool
 
-🔹 Paso 5.3 – Directorios de configuración y datos
+ Paso 5.3 – Directorios de configuración y datos
 
 sudo mkdir /etc/prometheus
 sudo mkdir /var/lib/prometheus
@@ -179,7 +180,7 @@ Copiar archivos base:
 sudo mv prometheus-2.49.1.linux-amd64/consoles /etc/prometheus
 sudo mv prometheus-2.49.1.linux-amd64/console_libraries /etc/prometheus
 
-🔹 Paso 5.4 – Configuración básica de Prometheus
+ Paso 5.4 – Configuración básica de Prometheus
 
 Crear archivo:
 
@@ -202,7 +203,7 @@ Permisos:
 
 sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
 
-🔹 Paso 5.5 – Crear servicio systemd
+ Paso 5.5 – Crear servicio systemd
 
 sudo nano /etc/systemd/system/prometheus.service
 
@@ -239,7 +240,7 @@ Acceso web:
 
 http://localhost:9090
 
-6️⃣ Instalación de Grafana
+6. Instalación de Grafana
 
 Grafana no viene en repos oficiales, hay que añadirlos.
 
@@ -266,11 +267,11 @@ Verificar:
 
 sudo systemctl status grafana-server
 
-✅ Resultado esperado:
+Resultado esperado:
 
 Active: active (running)
 
-🔹 Paso 6.4 — Acceso web
+ Paso 6.4 — Acceso web
 
 Abrir navegador:
 
@@ -280,52 +281,52 @@ Credenciales por defecto:
 - Usuario: admin
 - Contraseña: admin
 
-Te pedirá cambiar la contraseña → Elegir una que recuerdes
+Te pedirá cambiar la contraseña -> Elegir una que recuerdes
 
-🔹 Paso 6.5 — Conectar Prometheus a Grafana
+ Paso 6.5 — Conectar Prometheus a Grafana
 
 En Grafana web:
-1. Menú lateral → ⚙️ Settings (o Connections)
+1. Menú lateral -> Settings (o Connections)
 2. Data Sources
 3. Add data source
 4. Seleccionar "Prometheus"
 5. URL: http://localhost:9090
-6. Scroll down → Save & Test
+6. Scroll down -> Save & Test
 
-✅ Resultado: "Data source is working"
+ Resultado: "Data source is working"
 
-🔹 Paso 6.6 — Crear dashboard de prueba
+ Paso 6.6 — Crear dashboard de prueba
 
-1. Menú lateral → Dashboards
-2. New → New Dashboard
+1. Menú lateral -> Dashboards
+2. New -> New Dashboard
 3. Add visualization
 4. Seleccionar "Prometheus"
 5. En Metric: escribir "up"
 6. Run query
 7. Deberías ver gráfica mostrando valor 1 (Prometheus está up)
-8. Save dashboard → Darle un nombre
+8. Save dashboard -> Darle un nombre
 
-✅ Si ves la gráfica → Grafana + Prometheus funcionando correctamente
+ Si ves la gráfica -> Grafana + Prometheus funcionando correctamente
 
 
 Sección 7: Guest Additions (Portapapeles Bidireccional)
 
-🔹 Paso 7.1 — Configurar VirtualBox (VM apagada)
+ Paso 7.1 — Configurar VirtualBox (VM apagada)
 
-En VirtualBox → Configuración de la VM:
-- General → Avanzado:
-  ✓ Portapapeles compartido: Bidireccional
-  ✓ Arrastrar y soltar: Bidireccional
+En VirtualBox -> Configuración de la VM:
+- General -> Avanzado:
+   Portapapeles compartido: Bidireccional
+   Arrastrar y soltar: Bidireccional
 
-🔹 Paso 7.2 — Actualizar sistema (CRÍTICO)
+ Paso 7.2 — Actualizar sistema (CRÍTICO)
 
-⚠️ Hacer ANTES de instalar Guest Additions:
+Hacer ANTES de instalar Guest Additions:
 
 sudo apt update
 sudo apt upgrade -y
 sudo reboot
 
-🔹 Paso 7.3 — Instalar dependencias
+ Paso 7.3 — Instalar dependencias
 
 sudo apt install -y \
     build-essential \
@@ -338,10 +339,10 @@ Verificar:
 dpkg -l | grep build-essential
 dpkg -l | grep dkms
 
-🔹 Paso 7.4 — Instalar Guest Additions desde CD
+ Paso 7.4 — Instalar Guest Additions desde CD
 
 En VirtualBox (menú superior):
-Dispositivos → Insertar imagen de CD de las Guest Additions
+Dispositivos -> Insertar imagen de CD de las Guest Additions
 
 En la terminal:
 
@@ -352,15 +353,15 @@ sudo sh ./VBoxLinuxAdditions.run --nox11
 
 Esperar 1-3 minutos hasta que termine.
 
-🔹 Paso 7.5 — Reiniciar
+ Paso 7.5 — Reiniciar
 
 sudo reboot
 
-🔹 Paso 7.7 — Probar portapapeles
+ Paso 7.7 — Probar portapapeles
 
-✅ Si funciona en ambas direcciones → OK
+ Si funciona en ambas direcciones -> OK
 
-🔹 Paso 7.8 — Autostart (opcional)
+ Paso 7.8 — Autostart (opcional)
 
 Para que inicie automáticamente:
 
