@@ -28,9 +28,6 @@ outputs:
       types:
         - alert:
             tagged-packets: yes
-        - stats:
-            totals: yes
-            threads: no
 
   - stats:
       enabled: yes
@@ -38,6 +35,20 @@ outputs:
       append: yes
       totals: yes
       threads: no
+
+# Configuracion de timeouts
+flow-timeouts:
+  default: 10
+  tcp:
+    syn: 5             # Margen de 5s para recibir el ACK
+    established: 300 
+    emergency-syn: 1
+  udp:
+    new: 10            # Si solo vemos un paquete UDP, esperamos 10s a ver si hay respuesta
+    established: 30    # Si hay ida y vuelta, mantener 30 segundos
+  icmp:
+    new: 5
+    established: 10
 
 # Captura (no se usa aquí, se especifica en línea de comandos)
 af-packet:
