@@ -29,12 +29,17 @@ PROYECTO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS_DIR = os.path.join(PROYECTO_DIR, 'scripts')
 
 def limpiar():
-    """Limpia procesos y archivos previos"""
-    info('*** Limpiando procesos previos\n')
-    subprocess.run(['sudo', 'pkill', '-9', 'suricata'], stderr=subprocess.DEVNULL)
-    subprocess.run(['sudo', 'rm', '-f', '/var/run/suricata*.pid'], stderr=subprocess.DEVNULL)
+    """Limpia procesos y archivos de forma agresiva"""
+    info('*** Limpiando restos de ejecuciones anteriores...\n')
+    # Usamos pkill que es mucho más directo y no falla con las comillas de awk
+    subprocess.run(['sudo', 'pkill', '-9', '-f', 'suricata'], stderr=subprocess.DEVNULL)
+    
+    # Limpieza de Mininet
     subprocess.run(['sudo', 'mn', '-c'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(1)
+    
+    # Borrar archivos de PID sobrantes
+    subprocess.run('sudo rm -f /var/run/suricata*.pid', shell=True)
+    time.sleep(2)
 
 def main():
 
@@ -86,9 +91,18 @@ def main():
     servidor.cmd('python3 -m http.server 80 &')
 
     info('*** Iniciando Suricata en el SERVIDOR\n')
+    # Descativar offloading
+    #servidor.cmd('ethtool -K servidor-eth0 rx off tx off gso off gro off lro off tso off')
     # CRÍTICO: -i servidor-eth0 (interfaz DENTRO de Mininet)
-    servidor.cmd(f'suricata -c {CONFIG_RUN} -i servidor-eth0 -l {LOGS_DIR} -D')
+    servidor.cmd(f'suricata -c {CONFIG_RUN} -i servidor-eth0 -l {LOGS_DIR} > {LOGS_DIR}/suricata_stdout.log 2>&1 &')
     time.sleep(3)
+
+    # Verificación de PID (Añade esto para saber si realmente arrancó)
+    pid = servidor.cmd('pgrep -f suricata').strip()
+    if pid:
+        info(f'*** ✅ Suricata iniciado (PID: {pid})\n')
+    else:
+        info(f'*** ❌ ERROR: Suricata no arrancó. Revisa {LOGS_DIR}/suricata_stdout.log\n')
     
     info('*** Probando conectividad\n')
     net.pingAll()
