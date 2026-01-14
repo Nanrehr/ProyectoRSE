@@ -107,7 +107,7 @@ def main():
     info('  xterm cliente       - Abrir terminal en cliente\n')
     info('  xterm atacante      - Abrir terminal en atacante\n')
     info('  atacante ataque-syn          - Ejecutar ataque syn_flood\n')
-    cliente.cmd(f'alias ataque-syn="python3 {PROYECT_PATH}/src/ataques/syn_flood.py 10.0.0.1 80 100 0.01"')
+    atacante.cmd(f'alias ataque-syn="python3 {PROYECT_PATH}/src/ataques/syn_flood.py 10.0.0.1 80 100 0.01"')
     info('  cliente trafico-legitimo     - Ejecutar tráfico legítimo (2 min, cada 5 seg)\n')
     cliente.cmd(f'alias trafico-legitimo="python3 {SCRIPTS_DIR}/trafico_legitimo.py --servidor 10.0.0.1 --duracion 2 --intervalo 5"')
     info('\n*** Abriendo CLI\n')
