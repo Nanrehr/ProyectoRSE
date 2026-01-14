@@ -46,6 +46,9 @@ def main():
     # Limpiar antes de empezar
     limpiar()
 
+    # Resetear la terminal antes de empezar a escribir
+    os.system('stty sane')
+
     # Crear nuevo .yaml a raíz de la plantilla, con la ruta absoluta obtenida dinámicamente
     # 1. Leer el contenido de la plantilla original
     with open(CONFIG_TEMPLATE, 'r') as file:
@@ -128,9 +131,9 @@ def main():
     atacante.cmd(f'alias ataque-icmp="python3 {PROYECT_PATH}/src/ataques/icmp_flood.py 10.0.0.1 80 500 0.001"')
     info('\n*** Abriendo CLI\n')
     
-    os.system('stty sane')
     CLI(net)
-    
+    os.system('stty sane')
+
     info('*** Parando red\n')
     net.stop()
     limpiar()
