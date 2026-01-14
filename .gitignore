@@ -1,5 +1,10 @@
-#Ignorar logs Suricata
-/logs/suricata/
+# Ignorar todo el contenido de la carpeta logs pero mantener la carpeta (opcional)
+logs/suricata/*
+!logs/suricata/.gitkeep
 
-#Ignorar run local de Suricata
-suricata/suricata_run.yaml
+# Ignorar el archivo generado dinámicamente
+src/suricata/suricata_run.yaml
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
