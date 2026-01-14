@@ -1,13 +1,13 @@
 #Reglas DDoS - Proyecto RSE 2025
 
-# PRUEBA: Cada paquete SYN genera alerta (para verificar que funciona)
-alert tcp any any -> 10.0.0.1 80 (flags:S; msg:"RSE - TEST: SYN detectado"; classtype:attempted-dos; sid:1000010; rev:1;)
+# SYN FLOOD: 50 paquetes en 2 segundos
+alert tcp any any -> 10.0.0.1 80 (msg:"RSE - SYN FLOOD detectado"; flags:S; detection_filter:track by_dst, count 50, seconds 2; classtype:attempted-dos; sid:1000001; rev:2;)
 
-# SYN FLOOD: 30 paquetes en 2 segundos
-alert tcp any any -> 10.0.0.1 80 (flags:S; msg:"RSE - SYN FLOOD al puerto 80"; threshold:type threshold, track by_dst, count 30, seconds 2; classtype:attempted-dos; sid:1000001; rev:1;)
-
-# TCP FLOOD genérico: 50 paquetes en 3 segundos (cualquier puerto)
-alert tcp any any -> 10.0.0.1 any (flags:S; msg:"RSE - TCP FLOOD generico"; threshold:type threshold, track by_dst, count 50, seconds 3; classtype:attempted-dos; sid:1000002; rev:1;)
+# TCP FLOOD genérico: 50 paquetes en 2 segundos (cualquier puerto)
+alert tcp any any -> 10.0.0.1 any (flags:S; msg:"RSE - TCP FLOOD generico"; threshold:type threshold, track by_dst, count 50, seconds 2; classtype:attempted-dos; sid:1000002; rev:1;)
 
 # ICMP FLOOD: 10 paquetes en 2 segundos
 alert icmp any any -> 10.0.0.1 any (msg:"RSE - ICMP FLOOD"; threshold:type threshold, track by_dst, count 10, seconds 2; classtype:attempted-dos; sid:1000003; rev:1;)
+
+# UDP FLOOD genérico: 50 paquetes en 2 segundos (cualquier puerto)
+alert udp any any -> 10.0.0.1 any (msg:"RSE - UDP FLOOD generico"; threshold:type threshold, track by_dst, count 50, seconds 2; classtype:attempted-dos; sid:1000004; rev:1;)
