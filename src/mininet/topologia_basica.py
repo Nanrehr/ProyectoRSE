@@ -9,7 +9,7 @@ Topología:
                               |
                           atacante (h3)
 """
-
+import getpass
 import time
 import os
 import subprocess
@@ -60,9 +60,14 @@ def main():
 
     subprocess.run(['sudo', 'chmod', '777', CONFIG_RUN])
 
+    usuario = getpass.getuser()
+    subprocess.run(['sudo', 'chown', '-R', f'{usuario}:{usuario}', LOGS_DIR])
+
     # Crear directorio de logs con permisos
+    if os.path.exists(LOGS_DIR):
+        subprocess.run(['sudo', 'rm', '-rf', LOGS_DIR])
     os.makedirs(LOGS_DIR, exist_ok=True)
-    subprocess.run(['sudo', 'chmod', '777', LOGS_DIR])
+    os.chmod(LOGS_DIR, 0o777)
     
     info('*** Creando red Mininet\n')
     net = Mininet(link=TCLink, autoSetMacs=True)
@@ -92,17 +97,12 @@ def main():
 
     info('*** Iniciando Suricata en el SERVIDOR\n')
     # Descativar offloading
-    #servidor.cmd('ethtool -K servidor-eth0 rx off tx off gso off gro off lro off tso off')
+    servidor.cmd('ethtool -K servidor-eth0 rx off tx off gso off gro off lro off tso off')
     # CRÍTICO: -i servidor-eth0 (interfaz DENTRO de Mininet)
-    servidor.cmd(f'suricata -c {CONFIG_RUN} -i servidor-eth0 -l {LOGS_DIR} > {LOGS_DIR}/suricata_stdout.log 2>&1 &')
+    servidor.cmd(f'suricata -c {CONFIG_RUN} -i servidor-eth0 -l {LOGS_DIR} -D')
     time.sleep(3)
 
-    # Verificación de PID (Añade esto para saber si realmente arrancó)
-    pid = servidor.cmd('pgrep -f suricata').strip()
-    if pid:
-        info(f'*** ✅ Suricata iniciado (PID: {pid})\n')
-    else:
-        info(f'*** ❌ ERROR: Suricata no arrancó. Revisa {LOGS_DIR}/suricata_stdout.log\n')
+    subprocess.run(['sudo', 'chmod', '-R', 'a+rw', LOGS_DIR])
     
     info('*** Probando conectividad\n')
     net.pingAll()
