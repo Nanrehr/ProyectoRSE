@@ -185,7 +185,7 @@ Crear archivo:
 
 sudo nano /etc/prometheus/prometheus.yml
 
-Contenido mínimo:
+Contenido mínimo + Suricata:
 
 global:
   scrape_interval: 15s
@@ -194,6 +194,9 @@ scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
+  - job_name: "suricata"
+    static_configs:
+      - targets: ["localhost:8000"]
 
 Permisos:
 

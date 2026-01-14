@@ -23,6 +23,7 @@ PROYECT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 LOGS_DIR = os.path.join(PROYECT_PATH, "logs", "suricata")
 CONFIG_TEMPLATE = os.path.join(PROYECT_PATH, "src", "suricata", "suricata_template.yaml")
 CONFIG_RUN = os.path.join(PROYECT_PATH, "src", "suricata", "suricata_run.yaml")
+SURICATA_EXPORTER = os.path.join(PROYECT_PATH, "src", "scripts", "suricata_exporter.py")
 
 # Obtener la ruta base del proyecto
 PROYECTO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -102,6 +103,16 @@ def main():
     time.sleep(3)
 
     subprocess.run(['sudo', 'chmod', '-R', 'a+rw', LOGS_DIR])
+
+    info('*** Iniciando Suricata Exporter (Prometheus)\n')
+
+    exporter_proc = subprocess.Popen(
+        ['python3', SURICATA_EXPORTER],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
+    time.sleep(2)
     
     info('*** Probando conectividad\n')
     net.pingAll()
@@ -129,6 +140,7 @@ def main():
     atacante.cmd(f'alias ataque-udp="python3 {PROYECT_PATH}/src/ataques/udp_flood.py 10.0.0.1 80 500 0.001"')
     info('  atacante ataque-icmp          - Ejecutar ataque icmp_flood\n')
     atacante.cmd(f'alias ataque-icmp="python3 {PROYECT_PATH}/src/ataques/icmp_flood.py 10.0.0.1 80 500 0.001"')
+    
     info('\n*** Abriendo CLI\n')
     
     CLI(net)
@@ -136,6 +148,10 @@ def main():
 
     info('*** Parando red\n')
     net.stop()
+
+    exporter_proc.terminate()
+    exporter_proc.wait(timeout=5)
+
     limpiar()
 
 if __name__ == '__main__':
