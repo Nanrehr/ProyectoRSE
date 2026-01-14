@@ -1,0 +1,5 @@
+#Ignorar logs Suricata
+/logs/suricata/
+
+#Ignorar run local de Suricata
+suricata/suricata_run.yaml

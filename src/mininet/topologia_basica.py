@@ -8,82 +8,70 @@ Topología:
     servidor (h1) --- switch (s1) --- cliente (h2)
                               |
                           atacante (h3)
-
-LANZAR TOPOLOGÍA
-sudo python3 topologia_basica.py (se te queda dentro de mininet)
-
-LIMPIAR mininet después de su uso
-sudo mn -c
 """
 
+import time
+import os
+import subprocess
 from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 from mininet.link import TCLink
-import os
+
+# Rutas absolutas
+PROYECT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+LOGS_DIR = os.path.join(PROYECT_PATH, "logs", "suricata")
+CONFIG_TEMPLATE = os.path.join(PROYECT_PATH, "src", "suricata", "suricata_template.yaml")
+CONFIG_RUN = os.path.join(PROYECT_PATH, "src", "suricata", "suricata_run.yaml")
 
 # Obtener la ruta base del proyecto
 PROYECTO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS_DIR = os.path.join(PROYECTO_DIR, 'scripts')
 
-def crear_topologia_basica():
-    """
-    Crea topología simple con:
-    - 1 servidor (víctima del DDoS)
-    - 1 cliente legítimo
-    - 1 atacante
-    - 1 switch
-    """
-    
-    info('*** Creando red\n')
-    # Sin especificar controlador - usa el por defecto
-    net = Mininet(
-        link=TCLink,
-        autoSetMacs=True
-    )
-    
-    info('*** Añadiendo switch\n')
-    s1 = net.addSwitch('s1', failMode='standalone')
+def limpiar():
+    """Limpia procesos y archivos previos"""
+    info('*** Limpiando procesos previos\n')
+    subprocess.run(['sudo', 'pkill', '-9', 'suricata'], stderr=subprocess.DEVNULL)
+    subprocess.run(['sudo', 'rm', '-f', '/var/run/suricata*.pid'], stderr=subprocess.DEVNULL)
+    subprocess.run(['sudo', 'mn', '-c'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    time.sleep(1)
 
-    info('*** Añadiendo hosts\n')
-    # Servidor (víctima)
-    servidor = net.addHost(
-        'servidor',
-        ip='10.0.0.1/24',
-        mac='00:00:00:00:00:01'
-    )
+def main():
+
+    # Limpiar antes de empezar
+    limpiar()
+
+    # Crear nuevo .yaml a raíz de la plantilla, con la ruta absoluta obtenida dinámicamente
+    # 1. Leer el contenido de la plantilla original
+    with open(CONFIG_TEMPLATE, 'r') as file:
+        data = file.read()
+
+    # 2. Reemplar la ruta
+    data_actualizada = data.replace("REEMPLAZAR_CON_RUTA_PROYECTO", PROYECT_PATH)
+
+    # 3. Guardar el resultado en un archivo nuevo y dar permisos
+    with open(CONFIG_RUN, 'w') as file:
+        file.write(data_actualizada)
+
+    subprocess.run(['sudo', 'chmod', '777', CONFIG_RUN])
+
+    # Crear directorio de logs con permisos
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    subprocess.run(['sudo', 'chmod', '777', LOGS_DIR])
     
-    # Cliente normal
-    cliente = net.addHost(
-        'cliente',
-        ip='10.0.0.2/24',
-        mac='00:00:00:00:00:02'
-    )
+    info('*** Creando red Mininet\n')
+    net = Mininet(link=TCLink, autoSetMacs=True)
     
-    # Atacante
-    atacante = net.addHost(
-        'atacante',
-        ip='10.0.0.3/24',
-        mac='00:00:00:00:00:03'
-    )
+    info('*** Añadiendo nodos\n')
+    s1 = net.addSwitch('s1', failMode='standalone')
+    servidor = net.addHost('servidor', ip='10.0.0.1/24')
+    cliente = net.addHost('cliente', ip='10.0.0.2/24')
+    atacante = net.addHost('atacante', ip='10.0.0.3/24')
     
     info('*** Creando enlaces\n')
-    # Enlaces con ancho de banda limitado (más realista)
-    net.addLink(
-        servidor, s1,
-        bw=100,  # 100 Mbps
-        delay='5ms'
-    )
-    net.addLink(
-        cliente, s1,
-        bw=10,  # 10 Mbps
-        delay='10ms'
-    )
-    net.addLink(
-        atacante, s1,
-        bw=10,  # 10 Mbps
-        delay='10ms'
-    )
+    net.addLink(servidor, s1, bw=100, delay='5ms')
+    net.addLink(cliente, s1, bw=10, delay='10ms')
+    net.addLink(atacante, s1, bw=10, delay='10ms')
     
     info('*** Iniciando red\n')
     net.start()
@@ -96,6 +84,11 @@ def crear_topologia_basica():
     info('*** Configurando servidor web en h1\n')
     # Iniciar servidor HTTP simple en el servidor
     servidor.cmd('python3 -m http.server 80 &')
+
+    info('*** Iniciando Suricata en el SERVIDOR\n')
+    # CRÍTICO: -i servidor-eth0 (interfaz DENTRO de Mininet)
+    servidor.cmd(f'suricata -c {CONFIG_RUN} -i servidor-eth0 -l {LOGS_DIR} -D')
+    time.sleep(3)
     
     info('*** Probando conectividad\n')
     net.pingAll()
@@ -113,6 +106,8 @@ def crear_topologia_basica():
     info('  xterm servidor      - Abrir terminal en servidor\n')
     info('  xterm cliente       - Abrir terminal en cliente\n')
     info('  xterm atacante      - Abrir terminal en atacante\n')
+    info('  atacante ataque-syn          - Ejecutar ataque syn_flood\n')
+    cliente.cmd(f'alias ataque-syn="python3 {PROYECT_PATH}/src/ataques/syn_flood.py 10.0.0.1 80 100 0.01"')
     info('  cliente trafico-legitimo     - Ejecutar tráfico legítimo (2 min, cada 5 seg)\n')
     cliente.cmd(f'alias trafico-legitimo="python3 {SCRIPTS_DIR}/trafico_legitimo.py --servidor 10.0.0.1 --duracion 2 --intervalo 5"')
     info('\n*** Abriendo CLI\n')
@@ -121,7 +116,8 @@ def crear_topologia_basica():
     
     info('*** Parando red\n')
     net.stop()
+    limpiar()
 
 if __name__ == '__main__':
     setLogLevel('info')
-    crear_topologia_basica()
+    main()
