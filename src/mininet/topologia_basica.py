@@ -57,11 +57,7 @@ def main():
     # 3. Guardar el resultado en un archivo nuevo y dar permisos
     with open(CONFIG_RUN, 'w') as file:
         file.write(data_actualizada)
-
     subprocess.run(['sudo', 'chmod', '777', CONFIG_RUN])
-
-    usuario = getpass.getuser()
-    subprocess.run(['sudo', 'chown', '-R', f'{usuario}:{usuario}', LOGS_DIR])
 
     # Crear directorio de logs con permisos
     if os.path.exists(LOGS_DIR):
