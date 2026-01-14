@@ -1,13 +1,13 @@
 #Reglas DDoS - Proyecto RSE 2025
 
 # SYN FLOOD: 50 paquetes en 2 segundos. Solo alerta si no hay handshake (ACKs)
-alert tcp any any -> 10.0.0.1 80 (msg:"RSE - SYN FLOOD detectado"; flags:S; flow:to_server,not_established; detection_filter:track by_dst, count 50, seconds 2; threshold:type limit, track by_dst, count 1, seconds 60; classtype:attempted-dos; sid:1000001; rev:3;)
+alert tcp any any -> 10.0.0.1 80 (msg:"RSE - SYN FLOOD detectado"; flags:S; flow:to_server,not_established; detection_filter:track by_dst, count 50, seconds 2; classtype:attempted-dos; sid:1000001; rev:8;)
 
 # TCP FLOOD genérico: 50 paquetes en 2 segundos (cualquier puerto)
-alert tcp any any -> 10.0.0.1 any (msg:"RSE - TCP FLOOD generico"; flags:S; flow:to_server,not_established; detection_filter:track by_dst, count 50, seconds 2; threshold:type limit, track by_dst, count 1, seconds 60; classtype:attempted-dos; sid:1000002; rev:2;)
+alert tcp any any -> 10.0.0.1 any (msg:"RSE - TCP FLOOD generico"; flags:S; flow:to_server,not_established; threshold:type both, track by_dst, count 50, seconds 2; classtype:attempted-dos; sid:1000002; rev:7;)
 
 # ICMP FLOOD: 20 paquetes en 2 segundos
-alert icmp any any -> 10.0.0.1 any (msg:"RSE - ICMP FLOOD"; itype:8; flow:to_server; detection_filter:track by_dst, count 20, seconds 2; threshold:type limit, track by_dst, count 1, seconds 60; classtype:attempted-dos; sid:1000003; rev:2;)
+alert icmp any any -> 10.0.0.1 any (msg:"RSE - ICMP FLOOD"; itype:8; flow:to_server; detection_filter:track by_dst, count 20, seconds 2; classtype:attempted-dos; sid:1000003; rev:8;)
 
 # UDP FLOOD genérico: 50 paquetes en 2 segundos (cualquier puerto)
-alert udp any any -> 10.0.0.1 any (msg:"RSE - UDP FLOOD detectado"; flow:to_server; detection_filter:track by_dst, count 50, seconds 2; threshold:type limit, track by_dst, count 1, seconds 60; classtype:attempted-dos; sid:1000004; rev:3;)
+alert udp any any -> 10.0.0.1 any (msg:"RSE - UDP FLOOD detectado"; flow:to_server; detection_filter:track by_dst, count 50, seconds 2; classtype:attempted-dos; sid:1000004; rev:8;)
